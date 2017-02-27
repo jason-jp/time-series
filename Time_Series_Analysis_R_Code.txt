@@ -1,0 +1,244 @@
+############### Time Series Analysis R Code
+############### by Jason Somerville
+############### Teradata Japan - Data Scientist
+############### Submitted February 27, 2017
+
+############### Part 1: Cross Correlation
+
+# Input Data
+
+# Set directory
+
+setwd("blah")
+
+# Read Table applied to one column worth of data each
+# 50 or more values would be nice
+
+ts.1a  <- read.table("1a.csv",header=FALSE,sep=",")
+ts.2a  <- read.table("2a.csv",header=FALSE,sep=",")
+ts.3a  <- read.table("3a.csv",header=FALSE,sep=",")
+ts.4a  <- read.table("4a.csv",header=FALSE,sep=",")
+ts.1b  <- read.table("1b.csv",header=FALSE,sep=",")
+ts.3b  <- read.table("3b.csv",header=FALSE,sep=",")
+ts.4b  <- read.table("4b.csv",header=FALSE,sep=",")
+ts.5a  <- read.table("5a.csv",header=FALSE,sep=",")
+ts.6a  <- read.table("6a.csv",header=FALSE,sep=",")
+ts.7a  <- read.table("7a.csv",header=FALSE,sep=",")
+ts.8a  <- read.table("8a.csv",header=FALSE,sep=",")
+ts.9a  <- read.table("9a.csv",header=FALSE,sep=",")
+ts.10al  <- read.table("10a_long.csv",header=FALSE,sep=",")
+ts.10as  <- read.table("10a_short.csv",header=FALSE,sep=",")
+ts.10bl  <- read.table("10b_long.csv",header=FALSE,sep=",")
+ts.10bs  <- read.table("10b_short.csv",header=FALSE,sep=",")
+ts.full  <- read.table("3b_full.csv",header=FALSE,sep=",")
+
+# Input Data: Done
+
+# cross-covariance function plots
+# http://127.0.0.1:14008/library/stats/html/acf.html
+
+par(mfrow = c(2, 2))  
+
+# 1.
+ccf(ts.1a, ts.1b, main = "title 1", xlab = "time difference", ylab = "cross correlation",ci=0,ylim=c(-0.4,0.6))
+
+# 2.
+ccf(ts.2a, ts.1b, main = "title 2", xlab = "time difference", ylab = "cross correlation",ci=0,ylim=c(-0.4,0.6))
+
+# 3.
+ccf(ts.3a, ts.3b, main = "title 3", xlab = "time difference", ylab = "cross correlation",ci=0,ylim=c(-0.4,0.6))
+
+# 4.
+ccf(ts.4a, ts.4b, main = "title 4", xlab = "time difference", ylab = "cross correlation",ci=0,ylim=c(-0.4,0.6))
+
+#Let's plot four in one:
+par(mfrow = c(2, 2))  
+
+# 5.
+ccf(ts.5a, ts.full, main = "title 5", xlab = "time difference", ylab = "cross correlation",ci=0,ylim=c(-0.4,0.6))
+
+# 6.
+ccf(ts.6a, ts.full, main = "title 6", xlab = "time difference", ylab = "cross correlation",ci=0,ylim=c(-0.4,0.6))
+
+# 7.
+ccf(ts.7a, ts.full, main = "title 7", xlab = "time difference", ylab = "cross correlation",ci=0,ylim=c(-0.4,0.6))
+
+# 8.
+ccf(ts.8a, ts.full, main = "title 8", xlab = "time difference", ylab = "cross correlation",ci=0,ylim=c(-0.4,0.6))
+
+#Let's make the window back to normal:
+par(mfrow = c(1, 1))  
+
+# 9. 
+ccf(ts.9a, ts.full, main = "title 9", xlab = "time difference", ylab = "cross correlation",ci=0,ylim=c(-0.4,0.6))
+
+#Let's plot side by side:
+par(mfrow = c(1, 2))  
+
+# 10.
+ccf(ts.10al, ts.10bl, main = "title 10 long", xlab = "time difference", ylab = "cross correlation",ci=0,ylim=c(-0.4,0.6))
+
+# 11.
+ccf(ts.10as, ts.10bs, main = "title 10 short", xlab = "time difference", ylab = "cross correlation",ci=0,ylim=c(-0.4,0.6))
+
+############### Part 2: Auto Correlation
+
+library(ggfortify)
+autoplot(acf(ts.full, plot = FALSE),xlab="time difference",ylab="auto correlation",main="title auto correlation")
+
+############### Part 3: Exponential Smoothing
+
+# Read table: 10 years worth of data in one column
+# 100 or more values would be nice
+
+ts.10yr  <- ts(read.table("10yr.csv",header=FALSE,sep=","))
+10yr_hw <- HoltWinters(ts.10yr, beta=FALSE, gamma = FALSE)
+
+par(mfrow = c(1,1))  
+
+plot(10yr_hw, xlab="months elapsed",ylab="amount",main="exponential smoothing",lty=2,pch=22)
+
+############### Part 4: Spectral Analysis
+
+ts.full_ts <- ts(ts.full)
+
+graph1 <- autoplot(spec.ar(ts.full_ts, plot = FALSE),xlab="frequency",ylab="impact",main="spectral analysis 1")
+
+graph2 <- autoplot(spec.ar(ts.10yr, plot = FALSE),xlab="frequency",ylab="impact",main="spectral analysis 2")
+
+# Plotting graphs side by side
+
+grid.arrange(graph2,graph1,nrow=2)
+
+############### Part 5: Time Series Linear Regression Modeling
+
+# Introducing the lag variables
+
+y_t <- ts(ts.full)
+y_lag1 <- lag(y_t,1)
+y_lag5 <- lag(y_t,5)
+y_lag6 <- lag(y_t,6)
+y_lag12 <- lag(y_t,12)
+y_lag1log <- log(y_lag1)
+y_lag5log <- log(y_lag5)
+y_lag6log <- log(y_lag6)
+y_lag12log <- log(y_lag12)
+
+v_t <- ts(ts.7a)
+v_lag1 <- lag(v_t,1)
+v_lag6 <- lag(v_t,6)
+v_lag12 <- lag(v_t,12)
+v_lag1log <- log(v_lag1)
+v_lag6log <- log(v_lag6)
+v_lag12log <- log(v_lag12)
+
+a_t <- ts(ts.8a)
+a_lag1 <- lag(a_t,1)
+a_lag6 <- lag(a_t,6)
+a_lag12 <- lag(a_t,12)
+a_lag1log <- log(a_lag1)
+a_lag6log <- log(a_lag6)
+a_lag12log <- log(a_lag12)
+
+d_t <- ts(ts.9a)
+d_lag3 <- lag(d_t,3)
+d_lag7 <- lag(d_t,7)
+d_lag9 <- lag(d_t,9)
+d_lag3log <- log(d_lag3)
+d_lag7log <- log(d_lag7)
+d_lag9log <- log(d_lag9)
+
+h_t <- ts(ts.6a)
+h_lag2 <- lag(h_t,2)
+h_lag3 <- lag(h_t,3)
+h_lag2log <- log(h_lag2)
+h_lag3log <- log(h_lag3)
+
+# Start Modeling
+
+library(MASS)
+
+modelfit <- lm(y_t ~ v_lag1 + v_lag1log + a_lag1 + a_lag1log + d_lag3 + d_lag3log + h_lag2 + h_lag2log )
+
+summary(modelfit)
+
+modelfitstep <- stepAIC(modelfit, direction="both")
+
+summary(modelfitstep)
+
+# Start Predicting
+
+data_pre <- cbind(v_lag1,v_lag1log,a_lag1,a_lag1log,h_lag2,h_lag2log)
+
+model_pre <- predict(modelfitstep, data_pre, interval="predict")
+
+model_guess <- cbind(note_pre[41,1],note_pre[42,1],note_pre[43,1])
+
+model_lwr <- cbind(note_pre[41,2],note_pre[42,2],note_pre[43,2])
+
+model_upr <- cbind(note_pre[41,3],note_pre[42,3],note_pre[43,3])
+
+# How to plot the actual values vs the predicted values
+
+model_real <- ts.full[41:43,]
+
+time_x = c(1,2,3)
+
+plot(time_x,model_lwr,type="l",col="red",lty=4,ylim=c(0,15000),xlab="time",ylab="amount")
+lines(time_x,model_upr,type="l",col="red",lty=4)
+lines(time_x,model_real,type="l",col="black")
+lines(time_x,model_fit,type="l",col="red",lty=2)
+
+############### Part 6: Time Series ARIMA Modeling
+
+# Modeling is automatic
+
+model.0 <- auto.arima(y_t,ic="aic",trace=T,stepwise=F,approximation=F,seasonal=T)
+
+# Please see the diagnosis for accuracy of model
+
+tsdiag(model.0)
+
+# Please see the forecasting plot to see the prediction
+
+plot(forecast(model.0,level=c(50,95),h=3),shadecols=c("yellow","orange"),fcol=2,lwd=2,main="arima modeling with a predictive interval") 
+
+############### Part 7: Time Series ARCH Modeling
+
+# import these libraries
+
+library(tseries)
+
+library(vars)
+
+library(MTS)
+
+library(stats)
+library(forecast)
+
+library(fGarch)
+
+library(Metrics)
+
+# Automatic ARCH modeling:
+# garch(1,1) could be used in place of garch(1,0)
+
+(arch.fit0 <- garchFit(~garch(1,0),data=y_pre, trace=F))
+
+# Adjust the interval of x according to the time frame of data
+
+ggplot(data.frame(x=1:52,y=arch.fit0@sigma.t^2),aes(x=x,y=y))+
+geom_path()+xlab("Months passed")+ylab("Volatility")
+
+# QQ Norm Test
+qqnorm(arch.fit0@residuals/arch.fit0@sigma.t)
+abline(0,1)
+
+# Shapiro Test
+shapiro.test(arch.fit0@residuals/arch.fit0@sigma.t)
+
+# Predict 3 steps ahead
+predict(arch.fit1,n.ahead=3,plot=TRUE)
+
+# Optional: Plot the actual values - adjustments required for the x axis and y axis
+lines(11:13,y_pre2[41:43],type="l",col="black")
